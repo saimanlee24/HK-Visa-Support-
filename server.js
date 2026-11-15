@@ -1,7 +1,7 @@
-const express = require("express");
-const { key0Router } = require("@key0ai/key0/express");
-const { AccessTokenIssuer, RedisChallengeStore, RedisSeenTxStore, X402Adapter } = require("@key0ai/key0");
-const Redis = require("ioredis");
+import express from "express";
+import { key0Router } from "@key0ai/key0/express";
+import { AccessTokenIssuer, RedisChallengeStore, RedisSeenTxStore, X402Adapter } from "@key0ai/key0";
+import Redis from "ioredis";
 
 const app = express();
 app.use(express.json());
