@@ -2,15 +2,17 @@
   "name": "hk-visa-support",
   "version": "1.0.0",
   "main": "server.js",
+  "type": "module",
   "engines": {
     "node": "18.x"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "tsx server.js"
   },
   "dependencies": {
     "express": "latest",
     "@key0ai/key0": "latest",
-    "ioredis": "latest"
+    "ioredis": "latest",
+    "tsx": "latest"
   }
 }
