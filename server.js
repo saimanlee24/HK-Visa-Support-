@@ -5,6 +5,7 @@ import Redis from "ioredis";
 
 const app = express();
 app.use(express.json());
+app.use(express.static('public'));
 
 const adapter = new X402Adapter({ network: "mainnet" });
 const redisUrl = "rediss://default:gQAAAAAAAxg0AAIgcDE5YzA0OTZkYjA1Y2Q0ODM0OGE3MDg5NmJjYTMwNTY1Mg@grown-mastiff-202804.upstash.io:6379";
