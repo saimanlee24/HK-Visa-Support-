@@ -64,6 +64,37 @@ app.get("/", (req, res) => {
 });
 
 // Protected paid route
+// NEW: Document Checklist Endpoint ($1.00)
+app.get("/api/document-checklist/:country", key0.payPerRequest("document-checklist"), (req, res) => {
+  const payment = req.key0Payment;
+  const country = req.params.country;
+  const checklists = {
+    "Canada": ["Valid Passport (6+ months)", "Bank Statement (last 6 months)", "Invitation Letter", "Travel Itinerary", "Passport Photo"],
+    "USA": ["DS-160 Confirmation", "Valid Passport", "Visa Fee Receipt", "Photo 2x2 inches", "Employment Letter"],
+    "UK": ["Valid Passport", "TB Test Certificate", "Financial Proof", "Accommodation Details", "Travel History"],
+    "Australia": ["Valid Passport", "Health Insurance", "Character Certificate", "Financial Capacity", "GTE Statement"]
+  };
+  res.json({
+    country: country,
+    documents: checklists[country] || ["Valid Passport", "Bank Statement", "Travel Itinerary"],
+    txHash: payment?.txHash
+  });
+});
+
+// NEW: Visa Fees Calculator Endpoint ($1.50)
+app.get("/api/visa-fees/:country/:nationality", key0.payPerRequest("visa-fees"), (req, res) => {
+  const payment = req.key0Payment;
+  const { country, nationality } = req.params;
+  res.json({
+    country: country,
+    applicant_nationality: nationality,
+    base_fee: "$150 USD",
+    service_fee: "$75 USD",
+    total: "$225 USD",
+    processing_days: 14,
+    txHash: payment?.txHash
+  });
+});
 app.get("/api/immigration-check/:country", key0.payPerRequest("immigration-check"), (req, res) => {
   const payment = req.key0Payment; 
   res.json({ 
