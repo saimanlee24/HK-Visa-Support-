@@ -20,12 +20,25 @@ const key0 = key0Router({
     walletAddress: "0xEb70F3Ce1fD900589Ac5332eEe8dF71Be7d5eEcB",
     network: "mainnet",
     routes: [
-      { 
-        routeId: "immigration-check", 
-        method: "GET", 
-        path: "/api/immigration-check/:country", 
-        unitAmount: "$0.50" 
-      }
+  { 
+    routeId: "immigration-check", 
+    method: "GET", 
+    path: "/api/immigration-check/:country", 
+    unitAmount: "$0.50" 
+  },
+  { 
+    routeId: "document-checklist", 
+    method: "GET", 
+    path: "/api/document-checklist/:country", 
+    unitAmount: "$1.00" 
+  },
+  { 
+    routeId: "visa-fees", 
+    method: "GET", 
+    path: "/api/visa-fees/:country/:nationality", 
+    unitAmount: "$1.50" 
+  }
+],
     ],
     fetchResourceCredentials: async (params) =>
       tokenIssuer.sign(
