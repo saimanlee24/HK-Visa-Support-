@@ -14,7 +14,7 @@ const tokenIssuer = new AccessTokenIssuer("simon-super-secret-key-1234567890-abc
 const key0 = key0Router({
   config: {
     agentName: "HK Visa Support API",
-    agentUrl: "https://hk-visa-support-65808748.onhercules.app", 
+    agentUrl: "https://hk-visa-support.onrender.com", 
     providerName: "Simon Immigration Services",
     walletAddress: "0xEb70F3Ce1fD900589Ac5332eEe8dF71Be7d5eEcB",
     network: "mainnet",
@@ -39,6 +39,17 @@ const key0 = key0Router({
 
 app.use(key0);
 
+// NEW: Welcome route for the main homepage
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Welcome to HK Visa Support API",
+    status: "Live and accepting USDC payments on Base Mainnet",
+    testEndpoint: "/api/immigration-check/Canada",
+    contact: "65808748"
+  });
+});
+
+// Protected paid route
 app.get("/api/immigration-check/:country", key0.payPerRequest("immigration-check"), (req, res) => {
   const payment = req.key0Payment; 
   res.json({ 
