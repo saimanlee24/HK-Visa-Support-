@@ -5,7 +5,7 @@ import Redis from "ioredis";
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public')); // Serves the beautiful HTML website
+app.use(express.static('public'));
 
 const adapter = new X402Adapter({ network: "mainnet" });
 const redisUrl = "rediss://default:gQAAAAAAAxg0AAIgcDE5YzA0OTZkYjA1Y2Q0ODM0OGE3MDg5NmJjYTMwNTY1Mg@grown-mastiff-202804.upstash.io:6379";
@@ -20,24 +20,11 @@ const key0 = key0Router({
     walletAddress: "0xEb70F3Ce1fD900589Ac5332eEe8dF71Be7d5eEcB",
     network: "mainnet",
     routes: [
-      { 
-        routeId: "immigration-check", 
-        method: "GET", 
-        path: "/api/immigration-check/:country", 
-        unitAmount: "$0.50" 
-      },
-      { 
-        routeId: "document-checklist", 
-        method: "GET", 
-        path: "/api/document-checklist/:country", 
-        unitAmount: "$1.00" 
-      },
-      { 
-        routeId: "visa-fees", 
-        method: "GET", 
-        path: "/api/visa-fees/:country/:nationality", 
-        unitAmount: "$1.50" 
-      }
+      { routeId: "immigration-check", method: "GET", path: "/api/immigration-check/:country", unitAmount: "$0.50" },
+      { routeId: "document-checklist", method: "GET", path: "/api/document-checklist/:country", unitAmount: "$1.00" },
+      { routeId: "visa-fees", method: "GET", path: "/api/visa-fees/:country/:nationality", unitAmount: "$1.50" },
+      { routeId: "eligibility-score", method: "GET", path: "/api/eligibility-score/:country/:income", unitAmount: "$2.00" },
+      { routeId: "book-consultation", method: "GET", path: "/api/book-consultation", unitAmount: "$3.00" }
     ],
     fetchResourceCredentials: async (params) =>
       tokenIssuer.sign(
@@ -52,61 +39,55 @@ const key0 = key0Router({
 
 app.use(key0);
 
-// 1. Welcome route for the main homepage
 app.get("/", (req, res) => {
   res.json({ 
     message: "Welcome to HK Visa Support API",
     status: "Live and accepting USDC payments on Base Mainnet",
-    testEndpoints: [
-      "/api/immigration-check/Canada",
-      "/api/document-checklist/USA",
-      "/api/visa-fees/UK/Bangladeshi"
+    endpoints: [
+      "/api/immigration-check/:country ($0.50)",
+      "/api/document-checklist/:country ($1.00)",
+      "/api/visa-fees/:country/:nationality ($1.50)",
+      "/api/eligibility-score/:country/:income ($2.00)",
+      "/api/book-consultation ($3.00)"
     ],
     contact: "65808748"
   });
 });
 
-// 2. Protected paid route: Immigration Check ($0.50)
 app.get("/api/immigration-check/:country", key0.payPerRequest("immigration-check"), (req, res) => {
-  const payment = req.key0Payment; 
+  res.json({ country: req.params.country, status: "Verified", data: "Processing time: 14 days.", txHash: req.key0Payment?.txHash });
+});
+
+app.get("/api/document-checklist/:country", key0.payPerRequest("document-checklist"), (req, res) => {
+  const checklists = {
+    "Canada": ["Passport", "Bank Statement", "Invitation Letter"],
+    "USA": ["DS-160", "Passport", "Fee Receipt"],
+    "UK": ["Passport", "TB Test", "Financial Proof"]
+  };
+  res.json({ country: req.params.country, documents: checklists[req.params.country] || ["Passport", "Bank Statement"], txHash: req.key0Payment?.txHash });
+});
+
+app.get("/api/visa-fees/:country/:nationality", key0.payPerRequest("visa-fees"), (req, res) => {
+  res.json({ country: req.params.country, nationality: req.params.nationality, total_fee: "$225 USD", txHash: req.key0Payment?.txHash });
+});
+
+app.get("/api/eligibility-score/:country/:income", key0.payPerRequest("eligibility-score"), (req, res) => {
+  const income = parseInt(req.params.income);
+  let score = income > 50000 ? 95 : 70;
   res.json({ 
     country: req.params.country, 
-    status: "Success: Payment Verified on Base Mainnet",
-    txHash: payment?.txHash,
-    data: "Visa processing time: 14 days. Documents required: Passport, Bank Statement, Invitation Letter.",
-    contact: "65808748"
+    approval_probability: `${score}%`, 
+    recommendation: score > 80 ? "High chance of approval." : "Needs stronger financial proof.",
+    txHash: req.key0Payment?.txHash 
   });
 });
 
-// 3. Protected paid route: Document Checklist ($1.00)
-app.get("/api/document-checklist/:country", key0.payPerRequest("document-checklist"), (req, res) => {
-  const payment = req.key0Payment;
-  const country = req.params.country;
-  const checklists = {
-    "Canada": ["Valid Passport (6+ months)", "Bank Statement (last 6 months)", "Invitation Letter", "Travel Itinerary", "Passport Photo"],
-    "USA": ["DS-160 Confirmation", "Valid Passport", "Visa Fee Receipt", "Photo 2x2 inches", "Employment Letter"],
-    "UK": ["Valid Passport", "TB Test Certificate", "Financial Proof", "Accommodation Details", "Travel History"],
-    "Australia": ["Valid Passport", "Health Insurance", "Character Certificate", "Financial Capacity", "GTE Statement"]
-  };
-  res.json({
-    country: country,
-    documents: checklists[country] || ["Valid Passport", "Bank Statement", "Travel Itinerary"],
-    txHash: payment?.txHash
-  });
-});
-
-// 4. Protected paid route: Visa Fees Calculator ($1.50)
-app.get("/api/visa-fees/:country/:nationality", key0.payPerRequest("visa-fees"), (req, res) => {
-  const payment = req.key0Payment;
-  const { country, nationality } = req.params;
-  res.json({
-    country: country,
-    applicant_nationality: nationality,
-    base_fee: "$150 USD",
-    service_fee: "$75 USD",
-    total: "$225 USD",
-    processing_days: 14,
-    txHash: payment?.txHash
+app.get("/api/book-consultation", key0.payPerRequest("book-consultation"), (req, res) => {
+  res.json({ 
+    status: "Premium Lead Unlocked", 
+    consultant: "Simon Immigration Services",
+    whatsapp_link: "https://wa.me/85265808748?text=Hi%20Simon%2C%20I%20paid%20for%20priority%20visa%20consultation.",
+    txHash: req.key0Payment?.txHash 
   });
 });
 
